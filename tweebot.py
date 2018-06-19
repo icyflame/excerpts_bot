@@ -67,11 +67,17 @@ def main():
             "from the book %s" % h['book']
         ])
 
+    mail_html_context = ''.join([
+                                "<h1>Today'sExcerpt</h1>",
+                                "<blockquote>%s</blockquote>" % h['quote'],
+                                "<p>-- %s</p>" % h['book']
+                                ])
+
     sg = sendgrid.SendGridAPIClient(apikey=os.getenv("SENDGRID_API_KEY"))
     from_email = Email(os.getenv("SENDER_EMAIL"))
     to_email = Email(os.getenv("RECEIVER_EMAIL"))
     subject = "Today's Excerpt"
-    content = Content("text/plain", mail_pt_context)
+    content = Content("text/html", mail_html_context)
     mail = Mail(from_email, subject, to_email, content)
     print("Sending email")
     response = sg.client.mail.send.post(request_body=mail.get())
