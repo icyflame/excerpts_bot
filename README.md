@@ -1,10 +1,33 @@
-A bot to randomly publish excerpts from books. 
-Goodfellas your time isn't over!
+# Excerpts Bot - Email
 
-It publishes one tweet every 12 hours. To lookup for those tweets, it goes inside the `dir_to_lookup`. Then opens the file: `files_to_lookup.txt` to randomly choose a book. Afterwards it opens the corresponding book-file, randomly chooses an excerpt: Publish it!
+> A bot to send you an email daily that contains a randomly selected highlight
+> from the books you have read
 
-Someday I would like to improve it to a spaced repetition bot.
+Currently, reads highlights from Kindle notebooks (CSV files) and sends email
+via Sendgrid.
 
-Right now, it is posting from my account: [nishantiam](https://twitter.com/nishantiam)
+## Original
 
-:<3:
+This was originally [Nishant Nikhil](https://twitter.com/nishantiam)'s idea.
+
+His [repository](https://github.com/nishnik/excerpts_bot) has code to post the
+randomly chosen highlight on Twitter every 12 hours.
+
+## Environment Variables
+
+Check the .env.template file
+
+## Usage
+
+Running the `tweebot.py` script with the required environment variables will
+send a single email. You can use cron to make this a periodic email.
+
+```sh
+* 10 * * * python3 /media/username/code/excerpts_bot/tweebot.py
+```
+
+## License
+
+Code licensed under MIT
+
+Copyright (C) 2018  Siddharth Kannan <mail@siddharthkannan.in>

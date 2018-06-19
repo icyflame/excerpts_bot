@@ -9,7 +9,7 @@ from sendgrid.helpers.mail import *
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv(), verbose=True)
 
-FOLDER_PATH = './dir_to_lookup'
+FOLDER_PATH = os.getenv("DIR_WITH_CSV")
 TYPE_INDEX = 0
 QUOTE_INDEX = 3
 
@@ -31,7 +31,7 @@ def choose_excerpt(file_path, file_type):
                 # convert csv reader object to a list
                 highlights = [h for h in highlights]
 
-                book_name = highlights[1][0]
+                book_name = "%s %s" % (highlights[1][0], highlights[2][0])
 
                 highlights = [h for h in highlights \
                         if (len(h) > 1 and h[TYPE_INDEX].startswith("Highlight"))]
@@ -46,6 +46,7 @@ def choose_excerpt(file_path, file_type):
 
 def get_quote():
     files = os.listdir(FOLDER_PATH)
+    print("Files: ", files)
     files = [f for f in files if f.endswith('.csv')]
 
     to_open = random.choice(files)
@@ -68,7 +69,7 @@ def main():
         ])
 
     mail_html_context = ''.join([
-                                "<h1>Today'sExcerpt</h1>",
+                                "<h1>Today's Excerpt</h1>",
                                 "<blockquote>%s</blockquote>" % h['quote'],
                                 "<p>-- %s</p>" % h['book']
                                 ])
