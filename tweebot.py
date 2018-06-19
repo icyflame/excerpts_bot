@@ -1,44 +1,86 @@
-import tweepy
-import json
-
-env_dict = {}
-with open('env.json') as data_file:
-    env_dict = json.load(data_file)
-
-auth = tweepy.OAuthHandler(env_dict['CONSUMER_KEY'], env_dict['CONSUMER_SECRET'])
-auth.set_access_token(env_dict['ACCESS_KEY'], env_dict['ACCESS_SECRET'])
-api = tweepy.API(auth)
-twelve_hours = 12*60*60
-import time
-
 import random
-import os.path
+import os
+import csv
+from datetime import datetime
 
-def call_f():
-    f = open('dir_to_lookup/files_to_lookup.txt', 'r')
-    files = f.readlines()
-    f.close()
-    files = [f.strip() for f in files]
-    while True:
-        to_open = random.choice(files)
-        fname = 'dir_to_lookup/' + to_open
-        if os.path.isfile(fname):
-            f = open(fname, 'r')
-            break
-    data = f.readlines()
-    title = data[0].strip()
-    while True:
-        to_send = random.choice(data[2:]).strip()
-        if len(to_send) < 280 - 3 - len(title) - 9 and len(to_send) > 5:
-            break
-    return to_send + " : " + title + " - by bot"
+import sendgrid
+from sendgrid.helpers.mail import *
+
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv(), verbose=True)
+
+FOLDER_PATH = './dir_to_lookup'
+TYPE_INDEX = 0
+QUOTE_INDEX = 3
 
 
-while True:
-    to_write = call_f()
-    print (to_write)
-    api.update_status(to_write)
-    time.sleep(twelve_hours)
+def choose_excerpt(file_path, file_type):
+    '''
+    accepts a file path and the "type" of file it is (i.e Kindle highlights,
+    Android text file, etc)
 
+    returns a dictionary with the following keys:
+        - quote
+        - book
+    '''
+    if os.path.isfile(file_path):
+        if file_type == "kindle_csv":
+            with open(file_path, 'r') as csvfile:
+                highlights = csv.reader(csvfile, delimiter=',', quotechar='"')
 
+                # convert csv reader object to a list
+                highlights = [h for h in highlights]
 
+                book_name = highlights[1][0]
+
+                highlights = [h for h in highlights \
+                        if (len(h) > 1 and h[TYPE_INDEX].startswith("Highlight"))]
+                chosen = random.choice(highlights)
+
+                return {
+                        "book": book_name,
+                        "quote": chosen[QUOTE_INDEX]
+                        }
+        else:
+            return "TYPE NOT SUPPORTED"
+
+def get_quote():
+    files = os.listdir(FOLDER_PATH)
+    files = [f for f in files if f.endswith('.csv')]
+
+    to_open = random.choice(files)
+
+    fname = os.path.join(FOLDER_PATH, to_open)
+
+    return choose_excerpt(fname, "kindle_csv")
+
+def main():
+    print("%s" % datetime.now().isoformat())
+    print("Getting quote")
+    h = get_quote()
+
+    mail_pt_context = '\n'.join([ 
+            "Today's Excerpt",
+            "",
+            "%s" % h['quote'],
+            "",
+            "from the book %s" % h['book']
+        ])
+
+    sg = sendgrid.SendGridAPIClient(apikey=os.getenv("SENDGRID_API_KEY"))
+    from_email = Email(os.getenv("SENDER_EMAIL"))
+    to_email = Email(os.getenv("RECEIVER_EMAIL"))
+    subject = "Today's Excerpt"
+    content = Content("text/plain", mail_pt_context)
+    mail = Mail(from_email, subject, to_email, content)
+    print("Sending email")
+    response = sg.client.mail.send.post(request_body=mail.get())
+
+    print("Email sent. Response: ")
+
+    print(response.status_code)
+    print(response.body)
+    print(response.headers)
+
+if __name__ == '__main__':
+    main()

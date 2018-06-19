@@ -1,6 +1,0 @@
-sapiens.txt
-sapiens.txt
-sapiens.tx
-anthem.txt
-elements-of-style.txt
-elements-of-style.txt
