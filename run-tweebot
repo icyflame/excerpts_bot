@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+python3 /tweebot.py >> /var/log/cron.log 2>&1
