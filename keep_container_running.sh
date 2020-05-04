@@ -14,6 +14,7 @@ then
         echo "Restarting container"
         docker container stop excerpts
         docker container rm excerpts
+        docker build . -t excerpts:latest
         docker run -d --name excerpts excerpts:latest
 else
         echo "Container is running, no need to restart"
